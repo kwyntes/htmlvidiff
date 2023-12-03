@@ -1,4 +1,4 @@
-use std::{hash::Hash, ops::Range};
+use std::{fmt::Debug, hash::Hash, ops::Range};
 
 use html5tokenizer::{
     offset::PosTrackingReader, token::AttributeMap, trace::Trace, NaiveParser, TracingEmitter,
@@ -83,7 +83,7 @@ pub fn tokenize(html: &str) -> Vec<HtmlViDiffToken> {
     tokens
 }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct HtmlViDiffToken {
     pub span: Range<usize>,
     pub kind: HtmlViDiffTokenKind,
@@ -113,6 +113,26 @@ impl HtmlViDiffToken {
     }
 }
 
+impl Debug for HtmlViDiffToken {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.kind {
+            HtmlViDiffTokenKind::StringSegment(s) => write!(f, "{:?}", s)?,
+            HtmlViDiffTokenKind::StartTag {
+                name,
+                self_closing,
+                attrs,
+            } => write!(
+                f,
+                "<{}{}> with attrs {:#?}",
+                name,
+                self_closing.then_some("/").unwrap_or_default(),
+                attrs
+            )?,
+            HtmlViDiffTokenKind::EndTag(name) => write!(f, "</{}>", name)?,
+        }
+        write!(f, " at {:?}", self.span)
+    }
+}
 impl Hash for HtmlViDiffToken {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.kind.hash(state);
