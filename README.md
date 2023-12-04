@@ -31,14 +31,16 @@ the goal is to produce these results.
             1. Wrap all new content in `<ins>` tags.
             2. Run this algorithm on the existing content, and wrap it in `<ins class="-moved-into">` tags.
             3. Add a `-wrapper` class to the start tag.
-      3. If it is deleted _(test case #5)_:
+      3. If it is deleted:
          1. Find the matching _EndTag_.
          2. If it is new:
             1. ???
          3. If it is deleted:
             1. Run this algorithm on the content between the deleted start and end tag, and wrap it in an `<ins class="-unwrapped -moved-outof">` tag.
-         4. Otherwise:
-            1. ???
+         4. ~~Otherwise _(test case #5)_:~~
+            1. ~~Look for a (new?) matching _StartTag_ before the _EndTag_.~~
+            2. ~~...~~
+         > _Should be covered by 3.i.d. already.
       4. Otherwise _(test case #1)_:
          > We expect a deleted _StartTag_ of the same name either before or after
          > the _StartTag_ we found before.
