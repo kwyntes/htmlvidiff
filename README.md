@@ -67,6 +67,8 @@ To make test case #2 work, when finding matching tags, we also take deleted tags
 into account. I suppose this should always (?) work with valid HTML, but with
 invalid I don't trust this at all.
 
+[**oh god oh no**](https://html.spec.whatwg.org/multipage/syntax.html#optional-tags)
+
 Handling invalid HTML isn't really what I was going for anyway, but it would be
 nice if it doesn't produce total garbage.
 
