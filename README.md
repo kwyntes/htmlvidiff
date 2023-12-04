@@ -49,11 +49,9 @@ the goal is to produce these results.
          > the _StartTag_ we found before.  
          > The case of a deleted _StartTag_ before this one is now covered by 3.i.c.4.
          1. Look for a **deleted** **matching** _StartTag_ between this one and the _EndTag_.
-         2. If found:
-            2. Run this
-               algorithm on the content between the new and the deleted
-               _StartTag_, and wrap it in an `<ins class="-moved-into">` tag.
-            3. Add a `-content-changed` class to the new start tag.
+         2. If found: 2. Run this
+            algorithm on the content between the new and the deleted
+            _StartTag_, and wrap it in an `<ins class="-moved-into">` tag. 3. Add a `-content-changed` class to the new start tag.
          3. Else:
             > I think this means that the old HTML was invalid? Maybe?
             1. I think we just do nothing here?
