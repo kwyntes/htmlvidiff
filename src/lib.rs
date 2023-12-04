@@ -1,5 +1,9 @@
 pub mod highlight;
+mod tokendiff;
 pub mod tokenize;
+
+#[cfg(feature = "sanitization")]
+pub mod sanitize;
 
 #[cfg(test)]
 mod tests {

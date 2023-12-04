@@ -23,13 +23,13 @@ impl TraceGenericSpan for Trace {
     }
 }
 
-pub fn tokenize(html: &str) -> Vec<HtmlViDiffToken> {
+pub fn tokenize(html: &str) -> Vec<HtmlToken> {
     let mut parser =
         NaiveParser::new_with_emitter(PosTrackingReader::new(html), TracingEmitter::default())
             .flatten();
 
     let mut tokens = Vec::new();
-    let mut push_token = |span, kind| tokens.push(HtmlViDiffToken::new(span, kind));
+    let mut push_token = |span, kind| tokens.push(HtmlToken::new(span, kind));
     let mut strbuf = None;
     let mut last_char_was_whitespace = false;
     let mut str_start = 0;
@@ -43,7 +43,7 @@ pub fn tokenize(html: &str) -> Vec<HtmlViDiffToken> {
                     if let Some(strbuf) = strbuf.take() {
                         push_token(
                             str_start..token_span.start,
-                            HtmlViDiffTokenKind::StringSegment(strbuf),
+                            HtmlTokenKind::StringSegment(strbuf),
                         );
                     }
                 }
@@ -58,21 +58,21 @@ pub fn tokenize(html: &str) -> Vec<HtmlViDiffToken> {
                 if let Some(strbuf) = strbuf.take() {
                     push_token(
                         str_start..token_span.start,
-                        HtmlViDiffTokenKind::StringSegment(strbuf),
+                        HtmlTokenKind::StringSegment(strbuf),
                     );
                 }
                 match token {
                     html5tokenizer::Token::Char(_) => unreachable!(),
                     html5tokenizer::Token::StartTag(start_tag) => push_token(
                         token_span,
-                        HtmlViDiffTokenKind::StartTag {
+                        HtmlTokenKind::StartTag {
                             name: start_tag.name,
                             self_closing: start_tag.self_closing,
                             attrs: collect_attributes_normalized(start_tag.attributes),
                         },
                     ),
                     html5tokenizer::Token::EndTag(end_tag) => {
-                        push_token(token_span, HtmlViDiffTokenKind::EndTag(end_tag.name));
+                        push_token(token_span, HtmlTokenKind::EndTag(end_tag.name));
                     }
                     _ => {}
                 }
@@ -83,41 +83,29 @@ pub fn tokenize(html: &str) -> Vec<HtmlViDiffToken> {
     tokens
 }
 
-// #[derive(Debug)]
-pub struct HtmlViDiffToken {
+pub struct HtmlToken {
     pub span: Range<usize>,
-    pub kind: HtmlViDiffTokenKind,
-
-    has_been_inserted: bool,
+    pub kind: HtmlTokenKind,
 }
-impl HtmlViDiffToken {
-    fn new(span: Range<usize>, kind: HtmlViDiffTokenKind) -> Self {
-        Self {
-            span,
-            kind,
-            has_been_inserted: false,
+impl HtmlToken {
+    fn new(span: Range<usize>, kind: HtmlTokenKind) -> Self {
+        Self { span, kind }
+    }
+
+    pub(crate) fn clone_with_diff_tag(&self, diff_tag: SimplifiedDiffTag) -> HtmlTokenWithDiff {
+        HtmlTokenWithDiff {
+            diff_tag,
+            span: self.span.clone(),
+            kind: self.kind.clone(),
         }
     }
-
-    // REVIEW: This is probably a bad way of doing it and we might also not be
-    // seperating concerns properly anymore.
-
-    /// Mark the token's source HTML as being included in the output string.
-    pub fn mark_inserted(&mut self) {
-        self.has_been_inserted = true;
-    }
-
-    /// Whether or not the token's source HTML has been included in the output string.
-    pub fn has_been_inserted(&self) -> bool {
-        self.has_been_inserted
-    }
 }
 
-impl Debug for HtmlViDiffToken {
+impl Debug for HtmlToken {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match &self.kind {
-            HtmlViDiffTokenKind::StringSegment(s) => write!(f, "{:?}", s)?,
-            HtmlViDiffTokenKind::StartTag {
+            HtmlTokenKind::StringSegment(s) => write!(f, "{:?}", s)?,
+            HtmlTokenKind::StartTag {
                 name,
                 self_closing,
                 attrs,
@@ -128,22 +116,22 @@ impl Debug for HtmlViDiffToken {
                 self_closing.then_some("/").unwrap_or_default(),
                 attrs
             )?,
-            HtmlViDiffTokenKind::EndTag(name) => write!(f, "</{}>", name)?,
+            HtmlTokenKind::EndTag(name) => write!(f, "</{}>", name)?,
         }
         write!(f, " at {:?}", self.span)
     }
 }
-impl Hash for HtmlViDiffToken {
+impl Hash for HtmlToken {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.kind.hash(state);
     }
 }
-impl PartialEq for HtmlViDiffToken {
+impl PartialEq for HtmlToken {
     fn eq(&self, other: &Self) -> bool {
         self.kind == other.kind
     }
 }
-impl Eq for HtmlViDiffToken {}
+impl Eq for HtmlToken {}
 
 // NOTE: As of now, the Ord trait is required for capture_diff_slices
 // from the similar crate, but none of its methods are used there yet.
@@ -151,19 +139,25 @@ impl Eq for HtmlViDiffToken {}
 // Since tokens cannot be greater than or less than each other, it is not
 // possible to actually implement Ord, but since it won't be used anyway we can
 // just leave this unimplemented.
-impl PartialOrd for HtmlViDiffToken {
+impl PartialOrd for HtmlToken {
     fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
         unimplemented!()
     }
 }
-impl Ord for HtmlViDiffToken {
+impl Ord for HtmlToken {
     fn cmp(&self, _other: &Self) -> std::cmp::Ordering {
         unimplemented!()
     }
 }
 
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub enum HtmlViDiffTokenKind {
+pub(crate) struct HtmlTokenWithDiff {
+    pub span: Range<usize>,
+    pub kind: HtmlTokenKind,
+    pub diff_tag: SimplifiedDiffTag,
+}
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
+pub enum HtmlTokenKind {
     StringSegment(String),
     StartTag {
         name: String,
@@ -172,7 +166,7 @@ pub enum HtmlViDiffTokenKind {
     },
     EndTag(String),
 }
-impl HtmlViDiffTokenKind {
+impl HtmlTokenKind {
     /// Checks if the start tag is a void tag.
     /// Assumes the token is a start tag, panics otherwise.
     pub fn start_tag_is_void(&self) -> bool {
@@ -187,6 +181,15 @@ impl HtmlViDiffTokenKind {
             _ => false,
         }
     }
+}
+
+/// "Simplified" because [`similar::DiffTag`] also has a `Replace` variant,
+/// which is the same as a `Delete` followed by an `Insert` (or the other way
+/// around, whatever you like).
+pub(crate) enum SimplifiedDiffTag {
+    Equal,
+    Delete,
+    Insert,
 }
 
 /// Collects [`html5tokenizer::token::AttributeMap`] into a boxed slice of

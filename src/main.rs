@@ -1,12 +1,8 @@
-use htmlvidiff::tokenize::{self, HtmlViDiffToken};
+use htmlvidiff::tokenize::{self, HtmlToken};
 use similar::DiffOp;
 
 #[allow(unused)]
-fn debug_diff(
-    diff: Vec<DiffOp>,
-    old_tokens: Vec<HtmlViDiffToken>,
-    new_tokens: Vec<HtmlViDiffToken>,
-) {
+fn debug_diff(diff: Vec<DiffOp>, old_tokens: Vec<HtmlToken>, new_tokens: Vec<HtmlToken>) {
     println!("=== TOKEN DIFF ===");
     for op in diff {
         match op {

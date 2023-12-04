@@ -21,10 +21,15 @@ the goal is to produce these results.
 
 1. Go through the diff'ed tokens.
 2. If we encounter a _StringSegment_:
-   1. ???
+   1. If it is new:
+      1. Wrap it in an `<ins>` tag. _#TODO: Figure out how to merge contiguous
+         inserts into single `<ins>` tags._
+   2. Otherwise:
+      > We only want to highlight new things (for now at least).
+      1. Do nothing.
 3. If we encounter a _StartTag_:
    1. If it is new:
-      1. Find the matching _EndTag_.
+      1. Find the matching _EndTag_, taking into account deleted tokens as well.
       2. If it is new:
          1. If all content is new _(test case #3)_, wrap everything in an `<ins>` tag.
          2. Otherwise _(test case #4)_:
@@ -74,3 +79,15 @@ I'm probably going about this the wrong way entirely anyway, since I should just
 be doing actual tree diffing (and the fact we could then use DOM operation to
 wrap/modify tags is a nice bonus) but I'm too stupid to figure out how any of
 that works.
+
+---
+
+okay so [tree diffing is apparently really complicated][xmldiff] [+[archive
+link][+archive]] (which at least means there's more to it than me being an
+idiot), so i think that justifies me using the algorithm described above +
+sanitising the inputs by running them through a proper, spec-compliant HTML5
+parser and then letting that generate HTML source code again.  
+time complexity? O(h no)
+
+[xmldiff]: https://useless-factor.blogspot.com/2008/01/matching-diffing-and-merging-xml.html
+[+archive]: https://web.archive.org/web/20231204163430/https://useless-factor.blogspot.com/2008/01/matching-diffing-and-merging-xml.html
