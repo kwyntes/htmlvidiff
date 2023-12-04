@@ -37,19 +37,20 @@ the goal is to produce these results.
             1. ???
          3. If it is deleted:
             1. Run this algorithm on the content between the deleted start and end tag, and wrap it in an `<ins class="-unwrapped -moved-outof">` tag.
-         4. ~~Otherwise _(test case #5)_:~~
-            1. ~~Look for a (new?) matching _StartTag_ before the _EndTag_.~~
-            2. ~~...~~
-         > _Should be covered by 3.i.d. already.
+         4. Otherwise _(test case #5)_:
+            1. Look for a (new?) matching _StartTag_ between the deleted _StartTag_ and the _EndTag_.
+            2. If found:
+               1. Run this algorithm on the content between the deleted _StartTag_ and the _StartTag_ we just found, and wrap it in an `<ins class="-moved-outof">` tag.
+            3. Else:
+               > Invalid HTML??
+               1. ???
       4. Otherwise _(test case #1)_:
          > We expect a deleted _StartTag_ of the same name either before or after
-         > the _StartTag_ we found before.
-         1. Look for a **deleted** **matching** _StartTag_ before the _EndTag_.
+         > the _StartTag_ we found before.  
+         > The case of a deleted _StartTag_ before this one is now covered by 3.i.c.4.
+         1. Look for a **deleted** **matching** _StartTag_ between this one and the _EndTag_.
          2. If found:
-            1. If it is before the new _StartTag_ _(test case #1)_, run this
-               algorithm on the content between the deleted and the new
-               _StartTag_, and wrap it in an `<ins class="-moved-outof">` tag.
-            2. If it is after the new _StartTag_ _(test case #2?)_, run this
+            2. Run this
                algorithm on the content between the new and the deleted
                _StartTag_, and wrap it in an `<ins class="-moved-into">` tag.
             3. Add a `-content-changed` class to the new start tag.
