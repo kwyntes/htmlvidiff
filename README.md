@@ -91,3 +91,34 @@ time complexity? O(h no)
 
 [xmldiff]: https://useless-factor.blogspot.com/2008/01/matching-diffing-and-merging-xml.html
 [+archive]: https://web.archive.org/web/20231204163430/https://useless-factor.blogspot.com/2008/01/matching-diffing-and-merging-xml.html
+
+---
+
+i messed something up and now the whole thing is fucked so here's a sort of v2 (more like a v0.0.2) of the algorithm.
+
+test case #2 will produce the following token stream:
+```
++<p>
+ "some"
+ " "
+-<p>
+ "more"
++</p>
+ " "
+ "text"
+-</p>
+```
+
+1. Go through the token diff;
+2. When we encounter a _StringSegment_:
+   1. #TODO
+3. When we encounter a _StartTag_:
+   1. Look for the matching _EndTag_, disregarding the diff tags.
+   2. If not found, we're dealing with invalid HTML (right??) so either error out or silently skip this _StartTag_.
+   3. Otherwise, if the _StartTag_ is new:
+      1. If the _EndTag_ is new:
+         1. #TODO
+      2. If the _EndTag_ is deleted:
+         > - The _EndTag_ could have been moved further.
+         > - ...
+         1. #TODO
