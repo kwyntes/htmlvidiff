@@ -119,6 +119,19 @@ test case #2 will produce the following token stream:
       1. If the _EndTag_ is new:
          1. #TODO
       2. If the _EndTag_ is deleted:
-         > - The _EndTag_ could have been moved further.
+         > - The _EndTag_ could have been moved further. (seems to work out but i need a way to formally prove this)
          > - ...
          1. #TODO
+
+#### possible changes
+
+short_desc | generalised diff
+---|---
+move_into_tag | `(<A>|+<A> $% -<A>) (</A>|-</A> $% +</A>)`
+move_outof_tag | `(<A>|-<A> $% +<A>) (</A>|+</A> $% -</A>)`
+wrap_in_tag | `+<A> $% +</A>`
+unwrap_from_tag | `-<A> $% -</A>`
+
+
+IMPORT: we might want to emit two tokens for each stringelement so the diff engine will always find a longer sequence for strings than for tags so that stringsegments will be left alone and tags will be moved (deleted and inserted somewhere else).
+     ((( hope that makes sense )))
